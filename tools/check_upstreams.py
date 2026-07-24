@@ -9,11 +9,15 @@ import tempfile
 from pathlib import Path
 from urllib.request import Request, urlopen
 
-from safe_ingest import inspect_zip
+try:
+    from .safe_ingest import inspect_zip
+except ImportError:  # Direct script execution.
+    from safe_ingest import inspect_zip
 
 ENTRY = re.compile(
     r"^  (?P<name>[a-z]+):\n"
-    r"(?:    .*\n)*?"
+    r'    feed_commit: "(?P<commit>[^"]+)"\n'
+    r'    version: "(?P<version>[^"]+)"\n'
     r'    url: "(?P<url>[^"]+)"\n'
     r'    sha256: "(?P<sha>[0-9a-f]{64})"$',
     re.MULTILINE,
@@ -25,6 +29,8 @@ def load_lock(path):
     result = {}
     for match in ENTRY.finditer(text):
         result[match.group("name")] = {
+            "feed_commit": match.group("commit"),
+            "version": match.group("version"),
             "url": match.group("url"),
             "sha256": match.group("sha"),
         }
