@@ -1,8 +1,9 @@
 """Original adapter for the public Stremio-compatible stream JSON contract."""
 
+import json
 import re
-
-import requests
+from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 from ...contract import validate_result
 from ...health import available, failure, success
@@ -32,13 +33,14 @@ class StremioSource:
         return "%s/stream/movie/%s.json" % (self.base_url.rstrip("/"), imdb)
 
     def _request_json(self, url):
-        response = requests.get(
+        request = Request(
             url,
-            timeout=self.timeout,
             headers={"User-Agent": "MwoScrapers/0.1"},
         )
-        response.raise_for_status()
-        return response.json()
+        with urlopen(request, timeout=self.timeout) as response:
+            if response.status != 200:
+                raise HTTPError(url, response.status, "unexpected status", response.headers, None)
+            return json.loads(response.read().decode("utf-8"))
 
     def _normalize_stream(self, stream):
         name = str(stream.get("title") or stream.get("name") or "").strip()
@@ -90,6 +92,6 @@ class StremioSource:
                 normalized.append(item)
             success(self.provider_name)
             return normalized
-        except (requests.RequestException, ValueError, TypeError, KeyError):
+        except (HTTPError, URLError, TimeoutError, ValueError, TypeError, KeyError):
             failure(self.provider_name)
             return []
