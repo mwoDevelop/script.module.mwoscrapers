@@ -1,0 +1,18 @@
+schema: 1
+checked_at: "2026-07-24"
+sources:
+  coco:
+    feed_commit: "not-coco-joe/repository.cocoscrapers@main"
+    version: "1.0.39"
+    url: "https://raw.githubusercontent.com/not-coco-joe/repository.cocoscrapers/main/zips/script.module.cocoscrapers/script.module.cocoscrapers-1.0.39.zip"
+    sha256: "c6de1ad7ae612fe22a5b102504b9b6f7cebe8fe961de321bdae86b5dced5af59"
+  viper:
+    feed_commit: "OldManJax/repository.oldsalt@master"
+    version: "1.5.4"
+    url: "https://raw.githubusercontent.com/OldManJax/repository.oldsalt/master/script.module.viperscrapers/script.module.viperscrapers-1.5.4.zip"
+    sha256: "9c089bdffa6f30a0a987dfaf289c15eebddeaefc786171609e4e2ef6793f8f4a"
+  magneto:
+    feed_commit: "kodiyashimaru/repo@master"
+    version: "6.07.04"
+    url: "https://raw.githubusercontent.com/kodiyashimaru/repo/master/script.module.magneto/script.module.magneto-6.07.04.zip"
+    sha256: "f46f4d4f25453f3683beebd00bf35ab181e0588da32a4e8dd73917db27615427"

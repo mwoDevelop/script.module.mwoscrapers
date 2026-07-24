@@ -1,0 +1,18 @@
+{
+  "streams": [
+    {
+      "name": "Torrentio",
+      "title": "Big Buck Bunny 2008 1080p 1.25 GB\n👤 42",
+      "infoHash": "0123456789abcdef0123456789abcdef01234567"
+    },
+    {
+      "name": "Torrentio duplicate",
+      "title": "Big Buck Bunny 2008 1080p 1.25 GB\n👤 42",
+      "infoHash": "0123456789ABCDEF0123456789ABCDEF01234567"
+    },
+    {
+      "name": "Invalid",
+      "title": "Missing hash"
+    }
+  ]
+}

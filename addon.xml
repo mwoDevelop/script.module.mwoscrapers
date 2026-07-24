@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon id="script.module.mwoscrapers"
+       name="MwoScrapers"
+       version="0.1.0"
+       provider-name="mwoDevelop">
+  <requires>
+    <import addon="xbmc.python" version="3.0.0"/>
+    <import addon="script.module.requests"/>
+  </requires>
+  <extension point="xbmc.python.module" library="lib"/>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_GB">Auditable external providers for Umbrella</summary>
+    <description lang="en_GB">Small, independently implemented provider adapters with deterministic tests and source provenance.</description>
+    <platform>all</platform>
+    <license>GPL-3.0-only</license>
+    <source>https://github.com/mwoDevelop/script.module.mwoscrapers</source>
+  </extension>
+</addon>
