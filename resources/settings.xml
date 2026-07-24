@@ -3,8 +3,14 @@
   <section id="script.module.mwoscrapers">
     <category id="providers" label="Providers">
       <group id="torrent_providers" label="Torrent providers">
-        <setting id="provider.torrentio" type="boolean" label="Torrentio" default="true"/>
-        <setting id="provider.comet" type="boolean" label="Comet (testing)" default="false"/>
+        <setting id="provider.torrentio" type="boolean" label="Torrentio">
+          <default>true</default>
+          <control type="toggle"/>
+        </setting>
+        <setting id="provider.comet" type="boolean" label="Comet (testing)">
+          <default>false</default>
+          <control type="toggle"/>
+        </setting>
       </group>
     </category>
   </section>
