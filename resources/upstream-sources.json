@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "sources": {
+    "coco": {
+      "repository": "not-coco-joe/repository.cocoscrapers",
+      "ref": "main",
+      "feed_path": "zips/addons.xml",
+      "addon_id": "script.module.cocoscrapers",
+      "artifact_path": "zips/script.module.cocoscrapers/script.module.cocoscrapers-{version}.zip"
+    },
+    "viper": {
+      "repository": "OldManJax/repository.oldsalt",
+      "ref": "master",
+      "feed_path": "addons.xml",
+      "addon_id": "script.module.viperscrapers",
+      "artifact_path": "script.module.viperscrapers/script.module.viperscrapers-{version}.zip"
+    },
+    "magneto": {
+      "repository": "kodiyashimaru/repo",
+      "ref": "master",
+      "feed_path": "packages/addons.xml",
+      "addon_id": "script.module.magneto",
+      "artifact_path": "script.module.magneto/script.module.magneto-{version}.zip"
+    }
+  }
+}
