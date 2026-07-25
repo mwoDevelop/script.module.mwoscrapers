@@ -21,9 +21,15 @@ jobs:
         with:
           python-version: "3.12"
       - name: Download pinned artifacts
-        run: python tools/check_upstreams.py --output upstream-audit
+        run: >-
+          python tools/check_upstreams.py
+          --output upstream-audit
+          --markdown upstream-audit.md
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
         with:
           name: upstream-audit
-          path: upstream-audit
+          path: |
+            upstream-audit
+            upstream-audit.md
           retention-days: 14

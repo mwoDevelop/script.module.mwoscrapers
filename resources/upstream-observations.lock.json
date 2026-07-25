@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "sources": {
+    "coco": {
+      "repository": "not-coco-joe/repository.cocoscrapers",
+      "ref": "main",
+      "commit": "3b313077fc8e645f295bf5e4d44f8c34f9427fe7",
+      "version": "1.0.39",
+      "url": "https://raw.githubusercontent.com/not-coco-joe/repository.cocoscrapers/3b313077fc8e645f295bf5e4d44f8c34f9427fe7/zips/script.module.cocoscrapers/script.module.cocoscrapers-1.0.39.zip",
+      "sha256": "c6de1ad7ae612fe22a5b102504b9b6f7cebe8fe961de321bdae86b5dced5af59"
+    },
+    "viper": {
+      "repository": "OldManJax/repository.oldsalt",
+      "ref": "master",
+      "commit": "08c5e6a154504461e527564af8ac676f2ad0dd75",
+      "version": "1.5.4",
+      "url": "https://raw.githubusercontent.com/OldManJax/repository.oldsalt/08c5e6a154504461e527564af8ac676f2ad0dd75/script.module.viperscrapers/script.module.viperscrapers-1.5.4.zip",
+      "sha256": "9c089bdffa6f30a0a987dfaf289c15eebddeaefc786171609e4e2ef6793f8f4a"
+    },
+    "magneto": {
+      "repository": "kodiyashimaru/repo",
+      "ref": "master",
+      "commit": "aede005685c4e25a14c13a7875288ccefc52f1c6",
+      "version": "6.07.04",
+      "url": "https://raw.githubusercontent.com/kodiyashimaru/repo/aede005685c4e25a14c13a7875288ccefc52f1c6/script.module.magneto/script.module.magneto-6.07.04.zip",
+      "sha256": "f46f4d4f25453f3683beebd00bf35ab181e0588da32a4e8dd73917db27615427"
+    }
+  }
+}

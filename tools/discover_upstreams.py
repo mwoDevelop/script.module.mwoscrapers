@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Discover immutable provider artifacts without importing their code."""
+"""Discover provider observations without importing or executing their code."""
 
 import argparse
 import hashlib
 import json
 import tempfile
 from pathlib import Path
+from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 from xml.etree import ElementTree
@@ -17,8 +18,9 @@ except ImportError:  # Direct script execution.
     from check_upstreams import load_lock
     from safe_ingest import inspect_zip
 
+
 MAX_DOWNLOAD = 64 * 1024 * 1024
-USER_AGENT = "MwoScrapers-Discovery/0.1"
+USER_AGENT = "MwoScrapers-Discovery/0.2"
 
 
 def _read_url(url, limit=MAX_DOWNLOAD):
@@ -26,7 +28,7 @@ def _read_url(url, limit=MAX_DOWNLOAD):
     with urlopen(request, timeout=30) as response:
         payload = response.read(limit + 1)
     if len(payload) > limit:
-        raise ValueError("download exceeds limit: %s" % url)
+        raise ValueError("download exceeds limit")
     return payload
 
 
@@ -53,10 +55,8 @@ def _raw_url(repository, commit, path):
 def _addon_version(feed_payload, addon_id):
     root = ElementTree.fromstring(feed_payload)
     for addon in root.findall("addon"):
-        if addon.get("id") == addon_id:
-            version = addon.get("version")
-            if version:
-                return version
+        if addon.get("id") == addon_id and addon.get("version"):
+            return addon.get("version")
     raise ValueError("addon %s not found in feed" % addon_id)
 
 
@@ -67,39 +67,87 @@ def load_sources(path):
     return payload["sources"]
 
 
+def _availability(error):
+    if isinstance(error, HTTPError) and error.code in (404, 410):
+        return "unavailable"
+    if isinstance(error, (TimeoutError, URLError)):
+        return "transient_error"
+    if isinstance(error, HTTPError) and error.code in (429, 500, 502, 503, 504):
+        return "transient_error"
+    return "invalid"
+
+
+def _inspect(payload):
+    with tempfile.NamedTemporaryFile(suffix=".zip") as handle:
+        handle.write(payload)
+        handle.flush()
+        return inspect_zip(handle.name)
+
+
 def discover(source_path, lock_path, output, read_url=_read_url):
-    pinned = load_lock(lock_path)
+    reviewed = load_lock(lock_path)
     candidates = {}
     changed = False
-    for name, source in load_sources(source_path).items():
-        commit = _commit_sha(source["repository"], source["ref"], read_url)
-        feed_url = _raw_url(source["repository"], commit, source["feed_path"])
-        version = _addon_version(read_url(feed_url), source["addon_id"])
-        artifact_path = source["artifact_path"].format(version=version)
-        artifact_url = _raw_url(source["repository"], commit, artifact_path)
-        artifact = read_url(artifact_url)
-        digest = hashlib.sha256(artifact).hexdigest()
-        with tempfile.NamedTemporaryFile(suffix=".zip") as handle:
-            handle.write(artifact)
-            handle.flush()
-            inventory = inspect_zip(handle.name)
-        current = pinned.get(name, {})
-        artifact_changed = (
-            current.get("version") != version or current.get("sha256") != digest
-        )
-        changed = changed or artifact_changed
-        candidates[name] = {
-            "repository": source["repository"],
-            "ref": source["ref"],
-            "commit": commit,
-            "version": version,
-            "url": artifact_url,
-            "sha256": digest,
-            "artifact_changed": artifact_changed,
-            "files": inventory["files"],
-            "uncompressed_bytes": inventory["uncompressed_bytes"],
-        }
-    report = {"schema": 1, "changed": changed, "sources": candidates}
+    for name, source in sorted(load_sources(source_path).items()):
+        current = reviewed.get(name)
+        if not current:
+            candidates[name] = {
+                "status": "invalid",
+                "error": "source has no reviewed observation",
+            }
+            changed = True
+            continue
+        try:
+            commit = _commit_sha(source["repository"], source["ref"], read_url)
+            feed_url = _raw_url(source["repository"], commit, source["feed_path"])
+            version = _addon_version(read_url(feed_url), source["addon_id"])
+            artifact_path = source["artifact_path"].format(version=version)
+            artifact_url = _raw_url(source["repository"], commit, artifact_path)
+            artifact = read_url(artifact_url)
+            digest = hashlib.sha256(artifact).hexdigest()
+            inventory = _inspect(artifact)
+            content_changed = (
+                current["version"] != version or current["sha256"] != digest
+            )
+            provenance_changed = (
+                current["commit"] != commit or current["url"] != artifact_url
+            )
+            reviewed_url_status = "healthy"
+            if provenance_changed:
+                try:
+                    reviewed_payload = read_url(current["url"])
+                    if hashlib.sha256(reviewed_payload).hexdigest() != current["sha256"]:
+                        reviewed_url_status = "invalid"
+                except Exception as error:
+                    reviewed_url_status = _availability(error)
+            source_changed = (
+                content_changed
+                or provenance_changed
+                or reviewed_url_status != "healthy"
+            )
+            changed = changed or source_changed
+            candidates[name] = {
+                "status": "ok",
+                "repository": source["repository"],
+                "ref": source["ref"],
+                "commit": commit,
+                "version": version,
+                "url": artifact_url,
+                "sha256": digest,
+                "content_changed": content_changed,
+                "provenance_changed": provenance_changed,
+                "reviewed_url_status": reviewed_url_status,
+                "files": inventory["files"],
+                "uncompressed_bytes": inventory["uncompressed_bytes"],
+            }
+        except Exception as error:  # Report all sources in one run.
+            changed = True
+            candidates[name] = {
+                "status": _availability(error),
+                "error": str(error).split("?", 1)[0],
+                "reviewed": current,
+            }
+    report = {"schema": 2, "changed": changed, "sources": candidates}
     Path(output).write_text(
         json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
@@ -110,25 +158,32 @@ def render_markdown(report):
     lines = [
         "## Provider upstream discovery",
         "",
-        "| Source | Version | Commit | SHA-256 | Changed |",
-        "|---|---:|---|---|---:|",
+        "| Source | Version | Commit | Content | Provenance | Reviewed URL |",
+        "|---|---:|---|---|---|---|",
     ]
     for name, item in sorted(report["sources"].items()):
+        if item["status"] != "ok":
+            lines.append(
+                "| %s | - | - | unknown | unknown | %s |"
+                % (name, item["status"])
+            )
+            continue
         lines.append(
-            "| %s | %s | `%s` | `%s` | %s |"
+            "| %s | %s | `%s` | %s | %s | %s |"
             % (
                 name,
                 item["version"],
                 item["commit"][:12],
-                item["sha256"],
-                "yes" if item["artifact_changed"] else "no",
+                "changed" if item["content_changed"] else "unchanged",
+                "changed" if item["provenance_changed"] else "unchanged",
+                item["reviewed_url_status"],
             )
         )
     lines.extend(
         (
             "",
-            "No code was imported or executed. Review provenance and licensing "
-            "before updating a pin.",
+            "Observed artifacts are not accepted imports. No provider code was "
+            "imported or executed.",
         )
     )
     return "\n".join(lines) + "\n"
@@ -141,7 +196,8 @@ def main():
         "--sources", default=str(root / "resources" / "upstream-sources.json")
     )
     parser.add_argument(
-        "--lock", default=str(root / "resources" / "upstreams.lock.yml")
+        "--lock",
+        default=str(root / "resources" / "upstream-observations.lock.json"),
     )
     parser.add_argument("--output", required=True)
     parser.add_argument("--markdown")
