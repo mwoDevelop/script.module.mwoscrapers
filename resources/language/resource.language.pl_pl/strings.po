@@ -1,0 +1,21 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: MwoScrapers\n"
+"Language: pl_PL\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgctxt "#32000"
+msgid "Providers"
+msgstr "Providery"
+
+msgctxt "#32001"
+msgid "Torrent providers"
+msgstr "Providery torrentów"
+
+msgctxt "#32002"
+msgid "Torrentio"
+msgstr "Torrentio"
+
+msgctxt "#32003"
+msgid "Comet (testing)"
+msgstr "Comet (testowy)"

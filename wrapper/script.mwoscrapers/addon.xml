@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addon id="script.mwoscrapers"
        name="MwoScrapers Manager"
-       version="0.1.0"
+       version="0.1.1"
        provider-name="mwoDevelop">
   <requires>
     <import addon="xbmc.python" version="3.0.0"/>
-    <import addon="script.module.mwoscrapers" version="0.1.2"/>
+    <import addon="script.module.mwoscrapers" version="0.1.3"/>
   </requires>
   <extension point="xbmc.python.script" library="default.py">
     <provides>executable</provides>
