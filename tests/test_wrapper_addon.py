@@ -13,7 +13,7 @@ def test_wrapper_is_visible_program_addon_with_module_dependency():
         addon.find("./requires/import[@addon='script.module.mwoscrapers']").attrib[
             "version"
         ]
-        == "0.1.2"
+        == "0.1.3"
     )
     extension = addon.find("./extension[@point='xbmc.python.script']")
     assert extension.attrib["library"] == "default.py"
