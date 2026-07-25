@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon id="script.mwoscrapers"
+       name="MwoScrapers Manager"
+       version="0.1.0"
+       provider-name="mwoDevelop">
+  <requires>
+    <import addon="xbmc.python" version="3.0.0"/>
+    <import addon="script.module.mwoscrapers" version="0.1.2"/>
+  </requires>
+  <extension point="xbmc.python.script" library="default.py">
+    <provides>executable</provides>
+  </extension>
+  <extension point="xbmc.addon.metadata">
+    <summary lang="en_GB">Configure and inspect MwoScrapers providers</summary>
+    <summary lang="pl_PL">Konfiguracja i stan providerów MwoScrapers</summary>
+    <description lang="en_GB">A small user-facing manager for the MwoScrapers provider module used by Umbrella.</description>
+    <description lang="pl_PL">Mały, widoczny w Kodi manager modułu providerów MwoScrapers używanego przez Umbrellę.</description>
+    <platform>all</platform>
+    <license>GPL-3.0-only</license>
+    <source>https://github.com/mwoDevelop/script.module.mwoscrapers</source>
+  </extension>
+</addon>

@@ -1,0 +1,25 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: MwoScrapers Manager\n"
+"Language: en_GB\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgctxt "#32001"
+msgid "Open provider settings"
+msgstr "Open provider settings"
+
+msgctxt "#32002"
+msgid "Show provider status"
+msgstr "Show provider status"
+
+msgctxt "#32003"
+msgid "MwoScrapers module version: %s"
+msgstr "MwoScrapers module version: %s"
+
+msgctxt "#32004"
+msgid "enabled"
+msgstr "enabled"
+
+msgctxt "#32005"
+msgid "disabled"
+msgstr "disabled"
