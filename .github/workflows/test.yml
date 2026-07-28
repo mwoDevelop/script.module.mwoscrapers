@@ -16,6 +16,6 @@ jobs:
         with:
           python-version: "3.12"
       - run: python -m pip install -e '.[test]'
-      - run: ruff check lib tests tools
+      - run: ruff check lib relay tests tools
       - run: pytest
       - run: python tools/validate_addon.py .

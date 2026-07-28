@@ -19,3 +19,11 @@ msgstr "Torrentio"
 msgctxt "#32003"
 msgid "Comet (testing)"
 msgstr "Comet (testowy)"
+
+msgctxt "#32004"
+msgid "Torrentio endpoint or LAN relay"
+msgstr "Endpoint Torrentio lub relay LAN"
+
+msgctxt "#32005"
+msgid "Comet endpoint or LAN relay"
+msgstr "Endpoint Comet lub relay LAN"
