@@ -1,7 +1,22 @@
 import sys
 from types import SimpleNamespace
+from xml.etree import ElementTree
 
 from mwoscrapers.settings import provider_endpoint
+
+
+def test_endpoint_defaults_are_nonempty_valid_urls():
+    root = ElementTree.parse("resources/settings.xml").getroot()
+    defaults = {
+        setting.attrib["id"]: setting.findtext("default")
+        for setting in root.findall(".//setting")
+        if setting.attrib["id"].endswith(".endpoint")
+    }
+
+    assert defaults == {
+        "provider.comet.endpoint": "https://comet.elfhosted.com",
+        "provider.torrentio.endpoint": "https://torrentio.strem.fun",
+    }
 
 
 def test_provider_endpoint_accepts_lan_relay(monkeypatch):
