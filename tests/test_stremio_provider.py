@@ -42,6 +42,18 @@ def test_episode_url():
     ).endswith("/stream/series/tt1234567:2:3.json")
 
 
+def test_provider_endpoint_is_an_ocp_extension_point(monkeypatch):
+    monkeypatch.setattr(
+        "mwoscrapers.providers.torrents.stremio.provider_endpoint",
+        lambda name, default: "http://relay.lan:8766/torrentio",
+    )
+    provider = source()
+
+    assert provider._stream_url(
+        {"imdb": "tt1254207"}
+    ) == "http://relay.lan:8766/torrentio/stream/movie/tt1254207.json"
+
+
 def test_invalid_imdb_is_not_requested(monkeypatch):
     provider = source()
     monkeypatch.setattr(

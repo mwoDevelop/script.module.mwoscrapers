@@ -8,6 +8,7 @@ from urllib.request import Request, urlopen
 from ...contract import validate_result
 from ...health import available, failure, success
 from ...normalize import magnet_uri, normalize_btih, quality_from_name, size_gib_from_name
+from ...settings import provider_endpoint
 
 
 class StremioSource:
@@ -23,14 +24,15 @@ class StremioSource:
         imdb = str(data.get("imdb") or "").strip()
         if not re.fullmatch(r"tt\d+", imdb):
             return None
+        base_url = provider_endpoint(self.provider_name, self.base_url)
         if "tvshowtitle" in data:
             return "%s/stream/series/%s:%s:%s.json" % (
-                self.base_url.rstrip("/"),
+                base_url,
                 imdb,
                 int(data["season"]),
                 int(data["episode"]),
             )
-        return "%s/stream/movie/%s.json" % (self.base_url.rstrip("/"), imdb)
+        return "%s/stream/movie/%s.json" % (base_url, imdb)
 
     def _request_json(self, url):
         request = Request(

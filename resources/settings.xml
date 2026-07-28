@@ -7,9 +7,17 @@
           <default>true</default>
           <control type="toggle"/>
         </setting>
+        <setting id="provider.torrentio.endpoint" type="string" label="32004">
+          <default></default>
+          <control type="edit" format="string"/>
+        </setting>
         <setting id="provider.comet" type="boolean" label="32003">
           <default>false</default>
           <control type="toggle"/>
+        </setting>
+        <setting id="provider.comet.endpoint" type="string" label="32005">
+          <default></default>
+          <control type="edit" format="string"/>
         </setting>
       </group>
     </category>
