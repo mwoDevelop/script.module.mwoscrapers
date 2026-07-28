@@ -8,7 +8,7 @@
           <control type="toggle"/>
         </setting>
         <setting id="provider.torrentio.endpoint" type="string" label="32004">
-          <default></default>
+          <default>https://torrentio.strem.fun</default>
           <control type="edit" format="string"/>
         </setting>
         <setting id="provider.comet" type="boolean" label="32003">
@@ -16,7 +16,7 @@
           <control type="toggle"/>
         </setting>
         <setting id="provider.comet.endpoint" type="string" label="32005">
-          <default></default>
+          <default>https://comet.elfhosted.com</default>
           <control type="edit" format="string"/>
         </setting>
       </group>
