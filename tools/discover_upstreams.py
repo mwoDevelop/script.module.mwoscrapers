@@ -193,11 +193,11 @@ def main():
     root = Path(__file__).parents[1]
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--sources", default=str(root / "resources" / "upstream-sources.json")
+        "--sources", default=str(root / ".upstream" / "upstream-sources.json")
     )
     parser.add_argument(
         "--lock",
-        default=str(root / "resources" / "upstream-observations.lock.json"),
+        default=str(root / ".upstream" / "upstream-observations.lock.json"),
     )
     parser.add_argument("--output", required=True)
     parser.add_argument("--markdown")

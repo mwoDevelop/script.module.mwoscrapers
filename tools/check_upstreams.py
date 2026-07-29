@@ -137,7 +137,7 @@ def main():
         "--lock",
         default=str(
             Path(__file__).parents[1]
-            / "resources"
+            / ".upstream"
             / "upstream-observations.lock.json"
         ),
     )
