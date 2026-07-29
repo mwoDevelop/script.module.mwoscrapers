@@ -5,19 +5,26 @@ on:
   schedule:
     - cron: "41 4 * * *"
 
-permissions:
-  contents: read
-  issues: write
-
 concurrency:
   group: provider-upstream-discovery
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   discover:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      action: ${{ steps.candidate.outputs.action }}
+      base_commit: ${{ steps.candidate.outputs.base_commit }}
+      candidate_id: ${{ steps.candidate.outputs.candidate_id }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.12"
@@ -26,26 +33,128 @@ jobs:
           python tools/discover_upstreams.py
           --output upstream-discovery.json
           --markdown upstream-discovery.md
-      - name: Publish discovery report
+      - name: Prepare safe provenance-only candidate
+        run: >-
+          python tools/provider_provenance_candidate.py prepare
+          --discovery upstream-discovery.json
+          --output candidate
+      - name: Export candidate identity
+        id: candidate
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          candidate = json.loads(Path("candidate/candidate.json").read_text())
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
+              for key in ("action", "base_commit", "candidate_id"):
+                  output.write("%s=%s\n" % (key, candidate[key]))
+          PY
+      - name: Publish discovery and candidate bundle
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
-          name: upstream-discovery
+          name: provider-upstream-discovery
           path: |
             upstream-discovery.json
             upstream-discovery.md
+            candidate/
           retention-days: 14
-      - name: Open or update review issue
+
+  report:
+    needs: discover
+    if: always() && needs.discover.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      issues: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: provider-upstream-discovery
+      - name: Reconcile managed review issue
         env:
           GH_TOKEN: ${{ github.token }}
+          ACTION: ${{ needs.discover.outputs.action }}
         run: |
-          changed="$(python -c 'import json; print(str(json.load(open("upstream-discovery.json"))["changed"]).lower())')"
-          if [ "$changed" != "true" ]; then
-            exit 0
-          fi
           title="Provider upstream update detected"
           issue="$(gh issue list --state open --search "$title in:title" --json number,title --jq '.[] | select(.title == "'"$title"'") | .number' | head -n 1)"
+          changed="$(python -c 'import json; print(str(json.load(open("upstream-discovery.json"))["changed"]).lower())')"
+          if [ "$changed" != "true" ]; then
+            if [ -n "$issue" ]; then
+              gh issue close "$issue" --comment "All provider observations recovered; current run is a no-op."
+            fi
+            exit 0
+          fi
           if [ -n "$issue" ]; then
-            gh issue comment "$issue" --body-file upstream-discovery.md
+            gh issue edit "$issue" --body-file upstream-discovery.md
           else
             gh issue create --title "$title" --body-file upstream-discovery.md
           fi
+
+  propose:
+    needs: discover
+    if: needs.discover.outputs.action == 'propose'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.discover.outputs.base_commit }}
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: provider-upstream-discovery
+      - name: Verify and apply without executing provider code
+        run: >-
+          python tools/provider_provenance_candidate.py apply
+          --bundle candidate
+          --checkout .
+      - name: Open or update review-gated PR and ensure CI
+        env:
+          BRANCH: automation/provider-provenance
+          CANDIDATE_ID: ${{ needs.discover.outputs.candidate_id }}
+          BASE_COMMIT: ${{ needs.discover.outputs.base_commit }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git fetch origin main
+          git fetch origin "$BRANCH:refs/remotes/origin/$BRANCH" || true
+          test "$(git rev-parse origin/main)" = "$BASE_COMMIT"
+          git config user.name "mwoDevelop update bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+          git add .upstream/upstream-observations.lock.json
+          git diff --cached --quiet && { echo "Candidate produced no managed change"; exit 1; }
+          git commit -m "Update provider observation provenance" \
+            -m "Candidate-ID: $CANDIDATE_ID"
+          remote_sha="$(git show-ref --hash "refs/remotes/origin/$BRANCH" 2>/dev/null || true)"
+          if [ -n "$remote_sha" ]; then
+            git push origin "HEAD:refs/heads/$BRANCH" \
+              "--force-with-lease=refs/heads/$BRANCH:$remote_sha"
+          else
+            git push origin "HEAD:refs/heads/$BRANCH"
+          fi
+          number="$(gh pr list --state open --head "$BRANCH" --base main --json number --jq '.[0].number // empty')"
+          body="Automated provenance-only update. Accepted artifact SHA-256 values are unchanged. Candidate-ID: \`$CANDIDATE_ID\`. No provider code was imported or executed."
+          if [ -n "$number" ]; then
+            gh pr edit "$number" --title "Update provider observation provenance" --body "$body"
+          else
+            gh pr create --base main --head "$BRANCH" \
+              --title "Update provider observation provenance" --body "$body"
+          fi
+          head_sha="$(git rev-parse HEAD)"
+          gh workflow run test.yml --ref "$BRANCH"
+          found=false
+          for attempt in $(seq 1 15); do
+            run_head="$(gh run list --workflow test.yml --branch "$BRANCH" \
+              --event workflow_dispatch --limit 1 --json headSha \
+              --jq '.[0].headSha // empty')"
+            if [ "$run_head" = "$head_sha" ]; then
+              found=true
+              break
+            fi
+            sleep 2
+          done
+          test "$found" = true
