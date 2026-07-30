@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from urllib.error import URLError
 
 from mwoscrapers.providers.torrents.torrentio import source
 
@@ -62,3 +63,70 @@ def test_invalid_imdb_is_not_requested(monkeypatch):
         lambda url: (_ for _ in ()).throw(AssertionError("network called")),
     )
     assert provider.sources({"imdb": "invalid"}, {}) == []
+
+
+def test_transport_failure_falls_back_to_public_endpoint(monkeypatch):
+    provider = source()
+    calls = []
+    monkeypatch.setattr(
+        provider,
+        "_stream_urls",
+        lambda _data: ("http://relay.invalid/item", "https://public/item"),
+    )
+
+    def request(url):
+        calls.append(url)
+        if "relay.invalid" in url:
+            raise URLError("relay unavailable")
+        return _fixture()
+
+    monkeypatch.setattr(provider, "_request_json", request)
+
+    assert len(provider.sources({"imdb": "tt1254207"}, {})) == 1
+    assert calls == [
+        "http://relay.invalid/item",
+        "https://public/item",
+    ]
+
+
+def test_valid_empty_response_does_not_fall_back(monkeypatch):
+    provider = source()
+    calls = []
+    monkeypatch.setattr(
+        provider,
+        "_stream_urls",
+        lambda _data: ("http://relay/item", "https://public/item"),
+    )
+
+    def request(url):
+        calls.append(url)
+        return {"streams": []}
+
+    monkeypatch.setattr(provider, "_request_json", request)
+
+    assert provider.sources({"imdb": "tt1254207"}, {}) == []
+    assert calls == ["http://relay/item"]
+
+
+def test_invalid_contract_falls_back_and_health_fails_only_once(monkeypatch):
+    provider = source()
+    calls = []
+    health_failures = []
+    monkeypatch.setattr(
+        provider,
+        "_stream_urls",
+        lambda _data: ("http://relay/item", "https://public/item"),
+    )
+    monkeypatch.setattr(
+        provider,
+        "_request_json",
+        lambda url: calls.append(url) or {"not_streams": []},
+    )
+    monkeypatch.setattr(
+        "mwoscrapers.providers.torrents.stremio.failure",
+        lambda name: health_failures.append(name),
+    )
+
+    assert provider.sources({"imdb": "tt1254207"}, {}) == []
+    assert calls == ["http://relay/item", "https://public/item"]
+    assert health_failures == ["torrentio"]

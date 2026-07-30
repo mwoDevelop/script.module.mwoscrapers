@@ -47,6 +47,11 @@ http://qnap.lan:18766/torrentio
 
 The endpoint setting is deliberately owned by the provider adapter, so adding
 another provider does not change Umbrella or the registry contract.
+If a configured relay fails at the transport, HTTP, JSON, or stream-contract
+boundary, the adapter retries its code-defined public endpoint. A valid empty
+response is authoritative and is not duplicated. This keeps QNAP optional;
+the public fallback can still be rejected by a provider for a particular VPN
+exit address.
 
 ## Provider metadata relay
 

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <addon id="script.module.mwoscrapers"
        name="MwoScrapers"
-       version="0.1.6"
+       version="0.1.7"
        provider-name="mwoDevelop">
   <requires>
     <import addon="xbmc.python" version="3.0.0"/>
