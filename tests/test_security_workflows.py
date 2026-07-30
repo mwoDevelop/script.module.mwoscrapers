@@ -1,7 +1,7 @@
 from pathlib import Path
 
 ROOT = Path(__file__).parents[1]
-PIN = "304964cf75011827758dfb994f9811367cab89f3"
+PIN = "d7a1cca09e056fbbdebb2ba2d231e175eea7455b"
 
 
 def test_provider_code_is_scanned_before_tests_execute():
