@@ -23,3 +23,13 @@ def test_downloaded_provider_artifacts_are_scanned_without_importing_them():
     upload = workflow.index("actions/upload-artifact")
     assert download < scan < upload
     assert "candidate-path: upstream-audit" in workflow
+
+
+def test_relay_dockerfile_is_scanned_before_the_build():
+    workflow = (ROOT / ".github/workflows/relay-image.yml").read_text(
+        encoding="utf-8"
+    )
+    scan = workflow.index("Scan exact head before executing the Docker build")
+    build = workflow.index("docker/build-push-action")
+    assert scan < build
+    assert "git archive HEAD" in workflow
