@@ -26,7 +26,7 @@ jobs:
           --output upstream-audit
           --markdown upstream-audit.md
       - name: Scan downloaded immutable provider artifacts
-        uses: mwoDevelop/kodi/.github/actions/upstream-malware-scan@d7a1cca09e056fbbdebb2ba2d231e175eea7455b
+        uses: mwoDevelop/kodi/.github/actions/upstream-malware-scan@8b4fe96708d1e2e64cf535e3726fa7a9a4a1adb6
         with:
           candidate-path: upstream-audit
           output: upstream-security-report.json
