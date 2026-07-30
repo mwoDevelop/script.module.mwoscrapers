@@ -1,6 +1,5 @@
 from pathlib import Path
 
-
 ROOT = Path(__file__).parents[1]
 PIN = "28f29307987e277836cb610c944c120d60638ba4"
 
