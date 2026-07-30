@@ -25,6 +25,11 @@ jobs:
           python tools/check_upstreams.py
           --output upstream-audit
           --markdown upstream-audit.md
+      - name: Scan downloaded immutable provider artifacts
+        uses: mwoDevelop/kodi/.github/actions/upstream-malware-scan@8b4fe96708d1e2e64cf535e3726fa7a9a4a1adb6
+        with:
+          candidate-path: upstream-audit
+          output: upstream-security-report.json
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
@@ -32,4 +37,5 @@ jobs:
           path: |
             upstream-audit
             upstream-audit.md
+            upstream-security-report.json
           retention-days: 14
