@@ -8,7 +8,7 @@ from urllib.request import Request, urlopen
 from ...contract import validate_result
 from ...health import available, failure, success
 from ...normalize import magnet_uri, normalize_btih, quality_from_name, size_gib_from_name
-from ...settings import provider_endpoint
+from ...settings import provider_endpoint, provider_endpoints
 
 
 class StremioSource:
@@ -33,6 +33,26 @@ class StremioSource:
                 int(data["episode"]),
             )
         return "%s/stream/movie/%s.json" % (base_url, imdb)
+
+    def _stream_urls(self, data):
+        imdb = str(data.get("imdb") or "").strip()
+        if not re.fullmatch(r"tt\d+", imdb):
+            return ()
+        if "tvshowtitle" in data:
+            path = "/stream/series/%s:%s:%s.json" % (
+                imdb,
+                int(data["season"]),
+                int(data["episode"]),
+            )
+        else:
+            path = "/stream/movie/%s.json" % imdb
+        return tuple(
+            endpoint + path
+            for endpoint in provider_endpoints(
+                self.provider_name,
+                self.base_url,
+            )
+        )
 
     def _request_json(self, url):
         request = Request(
@@ -77,23 +97,41 @@ class StremioSource:
         if not data or not available(self.provider_name):
             return []
         try:
-            url = self._stream_url(data)
-            if not url:
-                return []
-            payload = self._request_json(url)
-            normalized = []
-            seen = set()
-            for stream in payload.get("streams", []):
-                item = self._normalize_stream(stream)
-                if not item:
-                    continue
-                key = (item["hash"], item["name"])
-                if key in seen:
-                    continue
-                seen.add(key)
-                normalized.append(item)
-            success(self.provider_name)
-            return normalized
-        except (HTTPError, URLError, TimeoutError, ValueError, TypeError, KeyError):
-            failure(self.provider_name)
+            urls = self._stream_urls(data)
+        except (ValueError, TypeError, KeyError):
             return []
+        for url in urls:
+            try:
+                payload = self._request_json(url)
+                if not isinstance(payload, dict) or not isinstance(
+                    payload.get("streams"), list
+                ):
+                    raise ValueError("provider violated stream contract")
+                normalized = []
+                seen = set()
+                for stream in payload["streams"]:
+                    if not isinstance(stream, dict):
+                        continue
+                    item = self._normalize_stream(stream)
+                    if not item:
+                        continue
+                    key = (item["hash"], item["name"])
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    normalized.append(item)
+                success(self.provider_name)
+                return normalized
+            except (
+                HTTPError,
+                URLError,
+                TimeoutError,
+                OSError,
+                ValueError,
+                TypeError,
+                KeyError,
+            ):
+                continue
+        if urls:
+            failure(self.provider_name)
+        return []

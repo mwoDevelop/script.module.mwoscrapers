@@ -2,7 +2,7 @@ import sys
 from types import SimpleNamespace
 from xml.etree import ElementTree
 
-from mwoscrapers.settings import provider_endpoint
+from mwoscrapers.settings import provider_endpoint, provider_endpoints
 
 
 def test_endpoint_defaults_are_nonempty_valid_urls():
@@ -32,6 +32,12 @@ def test_provider_endpoint_accepts_lan_relay(monkeypatch):
     assert provider_endpoint(
         "torrentio", "https://torrentio.strem.fun"
     ) == "http://192.168.1.39:18766/torrentio"
+    assert provider_endpoints(
+        "torrentio", "https://torrentio.strem.fun"
+    ) == (
+        "http://192.168.1.39:18766/torrentio",
+        "https://torrentio.strem.fun",
+    )
 
 
 def test_provider_endpoint_rejects_credentials_query_and_invalid_scheme(
@@ -55,3 +61,18 @@ def test_provider_endpoint_rejects_credentials_query_and_invalid_scheme(
     assert provider_endpoint("torrentio", default) == default
     assert provider_endpoint("torrentio", default) == default
     assert provider_endpoint("torrentio", default) == default
+
+
+def test_provider_endpoints_deduplicate_the_public_default(monkeypatch):
+    addon = SimpleNamespace(
+        getSetting=lambda _key: "https://torrentio.strem.fun/"
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "xbmcaddon",
+        SimpleNamespace(Addon=lambda _addon_id: addon),
+    )
+
+    assert provider_endpoints(
+        "torrentio", "https://torrentio.strem.fun"
+    ) == ("https://torrentio.strem.fun",)
