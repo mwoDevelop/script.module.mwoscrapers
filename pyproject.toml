@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mwoscrapers"
-version = "0.1.7"
+version = "0.1.9"
 description = "Auditable Kodi external provider module"
 requires-python = ">=3.8"
 license = "GPL-3.0-only"
