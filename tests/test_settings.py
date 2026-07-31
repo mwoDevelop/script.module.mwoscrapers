@@ -14,7 +14,7 @@ def test_endpoint_defaults_are_nonempty_valid_urls():
     }
 
     assert defaults == {
-        "provider.comet.endpoint": "https://comet.elfhosted.com",
+        "provider.comet.endpoint": "https://comet.feels.legal",
         "provider.torrentio.endpoint": "https://torrentio.strem.fun",
     }
 

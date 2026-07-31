@@ -11,7 +11,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 UPSTREAMS = {
-    "comet": "https://comet.elfhosted.com",
+    "comet": "https://comet.feels.legal",
     "torrentio": "https://torrentio.strem.fun",
 }
 STREAM_PATH = re.compile(

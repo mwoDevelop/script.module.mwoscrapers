@@ -65,7 +65,19 @@ class StremioSource:
             return json.loads(response.read().decode("utf-8"))
 
     def _normalize_stream(self, stream):
-        name = str(stream.get("title") or stream.get("name") or "").strip()
+        title = str(stream.get("title") or "").strip()
+        provider_name = str(stream.get("name") or "").strip()
+        description = str(stream.get("description") or "").strip()
+        name = title or (
+            description.splitlines()[0].strip()
+            if description
+            else provider_name
+        )
+        metadata = "\n".join(
+            value
+            for value in (title, provider_name, description)
+            if value
+        )
         btih = normalize_btih(
             stream.get("infoHash")
             or stream.get("url")
@@ -73,21 +85,25 @@ class StremioSource:
         )
         if not btih or not name:
             return None
-        seeders_match = re.search(r"(?:👤|seeders?[: ]+)\s*(\d+)", name, re.IGNORECASE)
+        seeders_match = re.search(
+            r"(?:👤|seeders?[: ]+)\s*(\d+)",
+            metadata,
+            re.IGNORECASE,
+        )
         item = {
             "provider": self.provider_name,
             "source": "torrent",
             "seeders": int(seeders_match.group(1)) if seeders_match else 0,
             "hash": btih,
             "name": name.splitlines()[0],
-            "name_info": name.replace("\n", " | "),
-            "quality": quality_from_name(name),
+            "name_info": metadata.replace("\n", " | "),
+            "quality": quality_from_name(metadata),
             "language": "en",
             "url": magnet_uri(btih, name.splitlines()[0]),
-            "info": name.replace("\n", " | "),
+            "info": metadata.replace("\n", " | "),
             "direct": False,
             "debridonly": True,
-            "size": size_gib_from_name(name),
+            "size": size_gib_from_name(metadata),
         }
         validate_result(item)
         return item

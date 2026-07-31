@@ -12,11 +12,11 @@
           <control type="edit" format="string"/>
         </setting>
         <setting id="provider.comet" type="boolean" label="32003">
-          <default>false</default>
+          <default>true</default>
           <control type="toggle"/>
         </setting>
         <setting id="provider.comet.endpoint" type="string" label="32005">
-          <default>https://comet.elfhosted.com</default>
+          <default>https://comet.feels.legal</default>
           <control type="edit" format="string"/>
         </setting>
       </group>

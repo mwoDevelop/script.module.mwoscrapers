@@ -31,7 +31,8 @@ responsibility.
 ## Providers
 
 - `torrentio`: enabled by default.
-- `comet`: opt-in until its live behavior is qualified on the target device.
+- `comet`: enabled by default as an independent public fallback when
+  Torrentio is unavailable.
 
 Both adapters are original implementations against the Stremio-compatible JSON
 contract. No source file from CocoScrapers, ViperScrapers, or Magneto is
@@ -51,7 +52,8 @@ If a configured relay fails at the transport, HTTP, JSON, or stream-contract
 boundary, the adapter retries its code-defined public endpoint. A valid empty
 response is authoritative and is not duplicated. This keeps QNAP optional;
 the public fallback can still be rejected by a provider for a particular VPN
-exit address.
+exit address. Enabling both independent providers prevents a Torrentio outage
+from making search depend on the QNAP relay or on a single public service.
 
 ## Provider metadata relay
 

@@ -4,7 +4,7 @@ from urllib.parse import urlsplit
 
 DEFAULTS = {
     "provider.torrentio": True,
-    "provider.comet": False,
+    "provider.comet": True,
 }
 
 

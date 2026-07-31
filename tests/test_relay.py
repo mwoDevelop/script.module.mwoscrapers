@@ -32,7 +32,7 @@ def test_only_fixed_provider_stream_paths_are_allowed():
     ) == "https://torrentio.strem.fun/stream/movie/tt1727587.json"
     assert upstream_url(
         "/comet/stream/series/tt0903747:1:1.json"
-    ) == "https://comet.elfhosted.com/stream/series/tt0903747:1:1.json"
+    ) == "https://comet.feels.legal/stream/series/tt0903747:1:1.json"
 
     for path in (
         "/torrentio/configure",
