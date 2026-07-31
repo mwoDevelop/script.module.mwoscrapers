@@ -13,4 +13,4 @@ providers:
     interface_reference: "Umbrella fb1fa4fe7fdab82091a6502da3f3610df2dcf71f"
     protocol: "Stremio stream JSON"
     license: "GPL-3.0-only"
-    status: testing
+    status: qualified

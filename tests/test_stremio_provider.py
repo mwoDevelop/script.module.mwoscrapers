@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from urllib.error import URLError
 
+from mwoscrapers.providers.torrents.comet import source as comet_source
 from mwoscrapers.providers.torrents.torrentio import source
 
 
@@ -29,6 +30,36 @@ def test_movie_url_and_normalized_deduplicated_results(monkeypatch):
     assert item["size"] == 1.25
     assert item["seeders"] == 42
     assert item["url"].startswith("magnet:?xt=urn:btih:")
+
+
+def test_comet_description_supplies_filename_quality_size_and_seeders(
+    monkeypatch,
+):
+    provider = comet_source()
+    monkeypatch.setattr(
+        provider,
+        "_request_json",
+        lambda _url: {
+            "streams": [
+                {
+                    "name": "[TORRENT] Comet 2160p",
+                    "description": (
+                        "Sintel.2010.2160p.WEB-DL.mkv\n"
+                        "size: 3.25 GB\nseeders: 17"
+                    ),
+                    "infoHash": "0123456789abcdef0123456789abcdef01234567",
+                }
+            ]
+        },
+    )
+
+    result = provider.sources({"imdb": "tt1727587"}, {})[0]
+
+    assert result["provider"] == "comet"
+    assert result["name"] == "Sintel.2010.2160p.WEB-DL.mkv"
+    assert result["quality"] == "4K"
+    assert result["size"] == 3.25
+    assert result["seeders"] == 17
 
 
 def test_episode_url():
