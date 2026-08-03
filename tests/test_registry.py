@@ -15,4 +15,4 @@ def test_ret_all_and_folder_filter():
 
 
 def test_pack_sources():
-    assert registry.pack_sources() == ["torrentio", "comet"]
+    assert registry.pack_sources() == []

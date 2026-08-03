@@ -74,6 +74,13 @@ def test_episode_url():
     ).endswith("/stream/series/tt1234567:2:3.json")
 
 
+def test_stremio_provider_does_not_advertise_unimplemented_pack_contract():
+    provider = source()
+
+    assert provider.pack_capable is False
+    assert not hasattr(provider, "sources_packs")
+
+
 def test_provider_endpoint_is_an_ocp_extension_point(monkeypatch):
     monkeypatch.setattr(
         "mwoscrapers.providers.torrents.stremio.provider_endpoint",

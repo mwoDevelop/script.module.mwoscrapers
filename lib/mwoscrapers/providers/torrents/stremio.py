@@ -13,7 +13,12 @@ from ...settings import provider_endpoint, provider_endpoints
 
 class StremioSource:
     priority = 1
-    pack_capable = True
+    # The Stremio stream contract exposes candidates for one concrete movie or
+    # episode. It does not implement Umbrella's separate ``sources_packs``
+    # capability. Advertising pack support makes Umbrella launch redundant
+    # season/show workers which contend on its provider cache before being
+    # rejected at the downstream capability boundary.
+    pack_capable = False
     hasMovies = True
     hasEpisodes = True
     provider_name = ""
