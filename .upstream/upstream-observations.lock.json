@@ -10,19 +10,19 @@
       "version": "1.0.39"
     },
     "magneto": {
-      "commit": "cc832981f438dcda1217617aa202644e2b06c1ff",
+      "commit": "257c91839c412eb29ec4f25dbe2b4b35bda27071",
       "ref": "master",
       "repository": "kodiyashimaru/repo",
       "sha256": "f46f4d4f25453f3683beebd00bf35ab181e0588da32a4e8dd73917db27615427",
-      "url": "https://raw.githubusercontent.com/kodiyashimaru/repo/cc832981f438dcda1217617aa202644e2b06c1ff/script.module.magneto/script.module.magneto-6.07.04.zip",
+      "url": "https://raw.githubusercontent.com/kodiyashimaru/repo/257c91839c412eb29ec4f25dbe2b4b35bda27071/script.module.magneto/script.module.magneto-6.07.04.zip",
       "version": "6.07.04"
     },
     "viper": {
-      "commit": "e611c505e441a6d89fccac0fed4f7e38b8fd30dd",
+      "commit": "5ef7c70c5eb61d5f4a1be3d17a8e04c44c8c5760",
       "ref": "master",
       "repository": "OldManJax/repository.oldsalt",
       "sha256": "9c089bdffa6f30a0a987dfaf289c15eebddeaefc786171609e4e2ef6793f8f4a",
-      "url": "https://raw.githubusercontent.com/OldManJax/repository.oldsalt/e611c505e441a6d89fccac0fed4f7e38b8fd30dd/script.module.viperscrapers/script.module.viperscrapers-1.5.4.zip",
+      "url": "https://raw.githubusercontent.com/OldManJax/repository.oldsalt/5ef7c70c5eb61d5f4a1be3d17a8e04c44c8c5760/script.module.viperscrapers/script.module.viperscrapers-1.5.4.zip",
       "version": "1.5.4"
     }
   }
