@@ -15,6 +15,10 @@ def test_endpoint_defaults_are_nonempty_valid_urls():
 
     assert defaults == {
         "provider.comet.endpoint": "https://comet.feels.legal",
+        "provider.eztv.endpoint": "https://eztvx.to",
+        "provider.mediafusion.endpoint": "https://mediafusionfortheweebs.midnightignite.me",
+        "provider.piratebay.endpoint": "https://apibay.org",
+        "provider.torz.endpoint": "https://stremthru.elfhosted.com/stremio/torz",
         "provider.torrentio.endpoint": "https://torrentio.strem.fun",
     }
 

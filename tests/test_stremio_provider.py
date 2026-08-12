@@ -3,7 +3,9 @@ from pathlib import Path
 from urllib.error import URLError
 
 from mwoscrapers.providers.torrents.comet import source as comet_source
+from mwoscrapers.providers.torrents.mediafusion import source as mediafusion_source
 from mwoscrapers.providers.torrents.torrentio import source
+from mwoscrapers.providers.torrents.torz import source as torz_source
 
 
 def _fixture():
@@ -168,3 +170,47 @@ def test_invalid_contract_falls_back_and_health_fails_only_once(monkeypatch):
     assert provider.sources({"imdb": "tt1254207"}, {}) == []
     assert calls == ["http://relay/item", "https://public/item"]
     assert health_failures == ["torrentio"]
+
+
+def test_torz_uses_credential_free_p2p_user_data_and_caps_results(monkeypatch):
+    provider = torz_source()
+    url = provider._stream_url({"imdb": "tt1254207"})
+    assert url is not None
+    assert "/stremio/torz/" in url
+    encoded = url.split("/stremio/torz/", 1)[1].split("/stream/", 1)[0]
+    import base64
+
+    config = json.loads(base64.b64decode(encoded).decode("utf-8"))
+    assert config == {
+        "indexers": [],
+        "stores": [{"c": "p2p", "t": ""}],
+    }
+    assert "realdebrid" not in json.dumps(config).lower()
+
+    stream = _fixture()["streams"][0]
+    monkeypatch.setattr(
+        provider,
+        "_request_json",
+        lambda _url: {"streams": [dict(stream, infoHash=("%040x" % i)) for i in range(150)]},
+    )
+    assert len(provider.sources({"imdb": "tt1254207"}, {})) == 100
+
+
+def test_mediafusion_uses_only_credential_free_p2p_header():
+    provider = mediafusion_source()
+    encoded = provider._request_headers()["encoded_user_data"]
+    encoded += "=" * (-len(encoded) % 4)
+    import base64
+
+    config = json.loads(base64.urlsafe_b64decode(encoded).decode("utf-8"))
+    assert config["streaming_providers"] == [
+        {
+            "enabled": True,
+            "name": "p2p",
+            "service": "p2p",
+            "use_mediaflow": False,
+        }
+    ]
+    serialized = json.dumps(config).lower()
+    assert "realdebrid" not in serialized
+    assert "token" not in serialized

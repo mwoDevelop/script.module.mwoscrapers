@@ -5,7 +5,14 @@ from mwoscrapers.contract import validate_provider_class, validate_result
 def test_all_registered_providers_implement_contract():
     assert PROVIDER_API_VERSION == 1
     providers = sources(ret_all=True)
-    assert [name for name, _ in providers] == ["torrentio", "comet"]
+    assert [name for name, _ in providers] == [
+        "torrentio",
+        "comet",
+        "torz",
+        "mediafusion",
+        "eztv",
+        "piratebay",
+    ]
     for _, provider_class in providers:
         assert validate_provider_class(provider_class)
 

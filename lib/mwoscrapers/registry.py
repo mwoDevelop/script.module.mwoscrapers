@@ -3,13 +3,16 @@
 from importlib import import_module
 from typing import Iterable, List, Optional, Tuple, Type
 
+from .descriptors import PROVIDER_DESCRIPTORS
 from .settings import provider_enabled
 
-PROVIDERS = {
-    "torrents": (
-        ("torrentio", "mwoscrapers.providers.torrents.torrentio"),
-        ("comet", "mwoscrapers.providers.torrents.comet"),
+PROVIDERS = {}
+for _descriptor in PROVIDER_DESCRIPTORS:
+    PROVIDERS.setdefault(_descriptor.folder, []).append(
+        (_descriptor.name, _descriptor.module)
     )
+PROVIDERS = {
+    folder: tuple(items) for folder, items in PROVIDERS.items()
 }
 
 

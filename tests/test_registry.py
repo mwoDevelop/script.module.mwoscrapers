@@ -10,6 +10,10 @@ def test_ret_all_and_folder_filter():
     assert [name for name, _ in registry.sources(("torrents",), ret_all=True)] == [
         "torrentio",
         "comet",
+        "torz",
+        "mediafusion",
+        "eztv",
+        "piratebay",
     ]
     assert registry.sources(("missing",), ret_all=True) == []
 

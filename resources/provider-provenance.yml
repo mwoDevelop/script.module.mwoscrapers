@@ -14,3 +14,35 @@ providers:
     protocol: "Stremio stream JSON"
     license: "GPL-3.0-only"
     status: qualified
+  torz:
+    implementation: original
+    copied_source_files: []
+    interface_reference: "StremThru 77e63f34e090470aa25c2b9478032753cf31fcaf"
+    protocol: "Stremio stream JSON with credential-free P2P user data"
+    upstream_license: "MIT"
+    license: "GPL-3.0-only"
+    status: qualified
+  mediafusion:
+    implementation: original
+    copied_source_files: []
+    interface_reference: "MediaFusion 15e76c575d3d819f19f4589c648256ba87278356"
+    protocol: "Stremio stream JSON with credential-free Direct P2P header"
+    upstream_license: "MIT"
+    license: "GPL-3.0-only"
+    status: qualified
+  eztv:
+    implementation: original
+    copied_source_files: []
+    interface_reference: "EZTV public get-torrents JSON API observed 2026-08-12"
+    protocol: "Structured JSON torrent metadata"
+    service_reference: "https://eztvx.to/api/get-torrents"
+    license: "GPL-3.0-only"
+    status: qualified
+  piratebay:
+    implementation: original
+    copied_source_files: []
+    interface_reference: "API Bay public q.php JSON contract observed 2026-08-12"
+    protocol: "Structured JSON torrent metadata"
+    service_reference: "https://apibay.org/q.php"
+    license: "GPL-3.0-only"
+    status: qualified

@@ -1,12 +1,12 @@
 # MwoScrapers
 
-Auditable external-provider module for Kodi 21/Omega and Umbrella.
+Audytowalny moduł zewnętrznych providerów dla Kodi 21/Omega i Umbrella.
 
-The project implements the provider contract independently and keeps provider
-selection, network parsing, normalization, provenance, and health isolation in
-small modules. It never calls a debrid service.
+Projekt implementuje kontrakt providerów niezależnie, a wybór źródeł, parsowanie
+sieciowe, normalizację, pochodzenie i izolację błędów utrzymuje w małych modułach.
+Nigdy nie wywołuje usługi debrid.
 
-## Development
+## Rozwój
 
 ```bash
 python3 -m venv .venv
@@ -16,64 +16,75 @@ pytest
 python tools/validate_addon.py .
 ```
 
-## Kodi contract
+## Kontrakt Kodi
 
-Umbrella loads:
+Umbrella ładuje:
 
 ```python
 mwoscrapers.sources(specified_folders=None, ret_all=False)
 ```
 
-The result is a list of `(provider_name, provider_class)` pairs. Cross-provider
-merging, filtering, sorting, and resolver behavior remain Umbrella's
-responsibility.
+Wynikiem jest lista par `(provider_name, provider_class)`. Scalanie wyników wielu
+providerów, filtrowanie, sortowanie i działanie resolvera pozostają
+odpowiedzialnością Umbrella.
 
-## Providers
+## Providerzy
 
-- `torrentio`: enabled by default.
-- `comet`: enabled by default as an independent public fallback when
-  Torrentio is unavailable.
+- `torrentio`: podstawowy adapter Stremio JSON;
+- `comet`: niezależny publiczny fallback Stremio JSON;
+- `torz`: tryb P2P StremThru bez magazynu debrid;
+- `mediafusion`: tryb Direct P2P bez danych debrid;
+- `eztv`: strukturalne źródło JSON dla odcinków;
+- `piratebay`: strukturalne API JSON dla filmów i odcinków.
 
-Both adapters are original implementations against the Stremio-compatible JSON
-contract. No source file from CocoScrapers, ViperScrapers, or Magneto is
-copied.
+Wszystkie sześć adapterów jest domyślnie włączonych i przeszło tę samą macierz
+kwalifikacyjną na BlueStacks oraz X88 Pro. Implementacje są własne i korzystają
+wyłącznie z publicznych kontraktów JSON. Żaden plik źródłowy CocoScrapers,
+ViperScrapers ani Magneto nie został skopiowany.
 
-The daily reviewed-artifact audit follows currently available CocoScrapers and
-ViperScrapers observations. The former Magneto observation is retained in
-`.upstream/retired-observations.json`; its pinned repository artifact was
-removed upstream and is not an active runtime dependency.
+Codzienny audyt artefaktów śledzi obecnie dostępne obserwacje CocoScrapers i
+ViperScrapers. Dawna obserwacja Magneto jest zachowana w
+`.upstream/retired-observations.json`; przypięty artefakt repozytorium został
+usunięty upstream i nie jest aktywną zależnością runtime.
 
-Each provider has an optional endpoint setting. Leaving it empty uses the
-public default. A private endpoint can point at a self-hosted provider or at
-the bundled LAN relay, for example:
+Każdy provider ma opcjonalne ustawienie endpointu. Pusta wartość wybiera publiczną
+wartość domyślną. Prywatny endpoint może wskazywać self-hosted provider lub dołączony
+relay LAN, na przykład:
 
 ```text
 http://qnap.lan:18766/torrentio
 ```
 
-The endpoint setting is deliberately owned by the provider adapter, so adding
-another provider does not change Umbrella or the registry contract.
-If a configured relay fails at the transport, HTTP, JSON, or stream-contract
-boundary, the adapter retries its code-defined public endpoint. A valid empty
-response is authoritative and is not duplicated. This keeps QNAP optional;
-the public fallback can still be rejected by a provider for a particular VPN
-exit address. Enabling both independent providers prevents a Torrentio outage
-from making search depend on the QNAP relay or on a single public service.
+Ustawienie endpointu celowo należy do adaptera, dzięki czemu dodanie kolejnego
+providera nie zmienia Umbrella ani kontraktu registry. Jeżeli skonfigurowany relay
+zawiedzie na granicy transportu, HTTP, JSON lub kontraktu stream, adapter ponawia
+próbę z publicznym endpointem zapisanym w kodzie. Poprawna pusta odpowiedź jest
+wiążąca i nie jest duplikowana. QNAP pozostaje opcjonalny; publiczny fallback może
+nadal zostać odrzucony przez providera dla konkretnego adresu wyjściowego VPN.
+Pozostałe niezależne źródła zapobiegają uzależnieniu całego wyszukiwania od relay
+QNAP albo jednej usługi publicznej.
 
-## Provider metadata relay
+## Dzienna kontrola dostępności
 
-`relay/` contains a separate, credential-free container. It exists for clients
-whose VPN exit receives `HTTP 403` from a public provider:
+Workflow `probe-provider-health.yml` wywołuje publiczne kontrakty bez relay i bez
+credentiali. Artefakt zawiera wyłącznie nazwę providera, typ próby, czas, status
+błędu i liczbę wyników. Nazwy źródeł, magnety, infohashe i URL-e treści nie są
+zapisywane. Trzy kolejne udane dzienne próby są bramką promocji zbiorczego wydania
+z testing do stable.
 
-- only fixed `torrentio` and `comet` Stremio stream paths are accepted;
-- arbitrary proxy targets, URL credentials, query strings and response bodies
-  larger than 2 MiB are rejected;
-- only public stream metadata is relayed; Real-Debrid credentials and resolved
-  media URLs never pass through it;
-- responses are contract-checked and cached briefly in memory;
-- the image runs read-only as a non-root user and is built for
-  `linux/amd64` plus `linux/arm/v7`.
+## Relay metadanych providerów
 
-Release tags named `relay-v*` publish an immutable GHCR manifest. Deploy by
-digest and bind the service to the trusted LAN; do not expose it to the
-Internet.
+`relay/` zawiera oddzielny kontener bez credentiali. Służy klientom, których wyjście
+VPN otrzymuje `HTTP 403` od publicznego providera:
+
+- akceptowane są wyłącznie stałe ścieżki stream Stremio `torrentio` i `comet`;
+- dowolne cele proxy, credentiale w URL, query string oraz odpowiedzi powyżej 2 MiB
+  są odrzucane;
+- przekazywane są tylko publiczne metadane; credentiale Real-Debrid i rozwiązane
+  URL-e mediów nigdy nie przechodzą przez relay;
+- odpowiedzi są sprawdzane kontraktowo i krótko buforowane w pamięci;
+- obraz działa tylko do odczytu jako użytkownik bez roota i jest budowany dla
+  `linux/amd64` oraz `linux/arm/v7`.
+
+Tagi wydań `relay-v*` publikują niezmienny manifest GHCR. Wdrażaj po digescie i
+wiąż usługę wyłącznie z zaufaną siecią LAN; nie wystawiaj jej do Internetu.

@@ -8,6 +8,10 @@ def test_boolean_settings_have_kodi_controls_and_defaults():
     assert {setting.attrib["id"] for setting in settings} == {
         "provider.torrentio",
         "provider.comet",
+        "provider.torz",
+        "provider.mediafusion",
+        "provider.eztv",
+        "provider.piratebay",
     }
     for setting in settings:
         assert setting.find("./control[@type='toggle']") is not None
