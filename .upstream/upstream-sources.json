@@ -14,13 +14,6 @@
       "feed_path": "addons.xml",
       "addon_id": "script.module.viperscrapers",
       "artifact_path": "script.module.viperscrapers/script.module.viperscrapers-{version}.zip"
-    },
-    "magneto": {
-      "repository": "kodiyashimaru/repo",
-      "ref": "master",
-      "feed_path": "packages/addons.xml",
-      "addon_id": "script.module.magneto",
-      "artifact_path": "script.module.magneto/script.module.magneto-{version}.zip"
     }
   }
 }
