@@ -50,11 +50,28 @@ class source(JsonApiSource):
         for torrent in torrents:
             if not isinstance(torrent, dict):
                 continue
-            if str(torrent.get("season")) != str(season):
+            observed_season = torrent.get("season")
+            observed_episode = torrent.get("episode")
+            try:
+                season_mismatch = (
+                    observed_season is not None
+                    and int(observed_season) != int(season)
+                )
+                episode_mismatch = (
+                    observed_episode is not None
+                    and int(observed_episode) != int(episode)
+                )
+            except (TypeError, ValueError):
                 continue
-            if str(torrent.get("episode")) != str(episode):
+            if season_mismatch or episode_mismatch:
                 continue
             name = torrent.get("filename") or torrent.get("title")
+            if (observed_season is None or observed_episode is None) and not re.search(
+                r"(?<![a-z0-9])s0*%d[\W_]*e0*%d(?!\d)"
+                % (int(season), int(episode)),
+                str(name or "").casefold(),
+            ):
+                continue
             result.append(
                 self._result(
                     torrent.get("hash"),

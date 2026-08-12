@@ -69,6 +69,45 @@ def test_eztv_returns_only_exact_episode_and_uses_leading_imdb_zero(monkeypatch)
     assert "imdb_id=0903747" in calls[0]
 
 
+def test_eztv_uses_strict_filename_fallback_for_missing_episode_fields(
+    monkeypatch,
+):
+    provider = eztv_source()
+    monkeypatch.setattr(
+        provider,
+        "_request_json",
+        lambda _url: {
+            "torrents_count": 2,
+            "torrents": [
+                {
+                    "filename": "Fixture.S01E01.1080p.mkv",
+                    "hash": HASH,
+                    "seeds": 12,
+                    "size_bytes": "100",
+                },
+                {
+                    "filename": "Fixture.S01E10.1080p.mkv",
+                    "hash": "1" * 40,
+                    "seeds": 99,
+                    "size_bytes": "100",
+                },
+            ],
+        },
+    )
+
+    results = provider.sources(
+        {
+            "imdb": "tt0903747",
+            "tvshowtitle": "Fixture",
+            "season": 1,
+            "episode": 1,
+        },
+        {},
+    )
+
+    assert [item["hash"] for item in results] == [HASH]
+
+
 def test_eztv_is_episode_only_and_checks_bounded_outer_pages(monkeypatch):
     provider = eztv_source()
     pages = []
