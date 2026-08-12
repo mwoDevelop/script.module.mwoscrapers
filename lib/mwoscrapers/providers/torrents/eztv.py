@@ -13,7 +13,7 @@ class source(JsonApiSource):
     hasMovies = False
     hasEpisodes = True
     page_size = 100
-    max_pages = 6
+    max_pages = 10
 
     def _page_url(self, endpoint, imdb, page):
         query = urlencode(
@@ -35,14 +35,24 @@ class source(JsonApiSource):
 
     @staticmethod
     def _page_order(total_pages):
-        order = []
-        low, high = 1, total_pages
-        while low <= high:
-            order.append(low)
-            if high != low:
-                order.append(high)
-            low += 1
-            high -= 1
+        if total_pages <= 0:
+            return []
+        order = [1]
+        if total_pages == 1:
+            return order
+        order.append(total_pages)
+        intervals = [(2, total_pages - 1)]
+        while intervals:
+            next_intervals = []
+            for low, high in intervals:
+                if low > high:
+                    continue
+                middle = (low + high) // 2
+                order.append(middle)
+                next_intervals.extend(
+                    ((low, middle - 1), (middle + 1, high))
+                )
+            intervals = next_intervals
         return order
 
     def _normalize_matches(self, torrents, season, episode):

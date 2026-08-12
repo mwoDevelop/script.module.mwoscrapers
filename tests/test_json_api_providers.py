@@ -15,6 +15,9 @@ HASH = "0123456789abcdef0123456789abcdef01234567"
     (
         ("Pokemon.2023.1080p", "Pokémon"),
         ("Amelie.2001.1080p", "Amélie"),
+        ("Aeon.Flux.2005.1080p", "Æon Flux"),
+        ("Lodz.2023.1080p", "Łódź"),
+        ("東京物語.1953.1080p", "東京物語"),
     ),
 )
 def test_piratebay_title_matching_removes_combining_marks(
@@ -142,6 +145,42 @@ def test_eztv_is_episode_only_and_checks_bounded_outer_pages(monkeypatch):
     )
     assert len(results) == 1
     assert pages == [1, 10]
+
+
+def test_eztv_page_order_reaches_middle_before_bounded_limit(monkeypatch):
+    provider = eztv_source()
+    pages = []
+
+    def request(url):
+        page = int(url.rsplit("page=", 1)[1])
+        pages.append(page)
+        torrents = []
+        if page == 5:
+            torrents = [
+                {
+                    "episode": "1",
+                    "filename": "Fixture.S01E01.720p.mkv",
+                    "hash": HASH,
+                    "season": "1",
+                    "seeds": 1,
+                    "size_bytes": "100",
+                }
+            ]
+        return {"torrents_count": 1000, "torrents": torrents}
+
+    monkeypatch.setattr(provider, "_request_json", request)
+    results = provider.sources(
+        {
+            "imdb": "tt0903747",
+            "tvshowtitle": "Fixture",
+            "season": 1,
+            "episode": 1,
+        },
+        {},
+    )
+
+    assert len(results) == 1
+    assert pages == [1, 10, 5]
 
 
 def test_piratebay_movie_rejects_wrong_imdb_and_title(monkeypatch):

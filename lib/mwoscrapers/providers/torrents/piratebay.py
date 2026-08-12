@@ -6,15 +6,42 @@ from urllib.parse import urlencode
 
 from .json_api import JsonApiSource
 
+LATIN_TRANSLITERATION = str.maketrans(
+    {
+        "Æ": "AE",
+        "Ð": "D",
+        "Ø": "O",
+        "Þ": "TH",
+        "ß": "ss",
+        "æ": "ae",
+        "ð": "d",
+        "ø": "o",
+        "þ": "th",
+        "Đ": "D",
+        "đ": "d",
+        "Ł": "L",
+        "ł": "l",
+        "Œ": "OE",
+        "œ": "oe",
+    }
+)
+
 
 def _normalized_title(value):
-    decomposed = unicodedata.normalize("NFKD", str(value or "")).casefold()
+    decomposed = unicodedata.normalize(
+        "NFKD", str(value or "").translate(LATIN_TRANSLITERATION)
+    ).casefold()
     decomposed = "".join(
         character
         for character in decomposed
         if unicodedata.category(character) != "Mn"
     )
-    return " ".join(re.findall(r"[a-z0-9]+", decomposed))
+    return " ".join(
+        "".join(
+            character if character.isalnum() else " "
+            for character in decomposed
+        ).split()
+    )
 
 
 def _title_matches(name, title):
