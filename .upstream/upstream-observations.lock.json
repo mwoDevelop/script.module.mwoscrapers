@@ -10,11 +10,11 @@
       "version": "1.0.39"
     },
     "magneto": {
-      "commit": "257c91839c412eb29ec4f25dbe2b4b35bda27071",
+      "commit": "2bc8e4cc76f1505eb0fdde58f6dbe294887b1f88",
       "ref": "master",
       "repository": "kodiyashimaru/repo",
       "sha256": "f46f4d4f25453f3683beebd00bf35ab181e0588da32a4e8dd73917db27615427",
-      "url": "https://raw.githubusercontent.com/kodiyashimaru/repo/257c91839c412eb29ec4f25dbe2b4b35bda27071/script.module.magneto/script.module.magneto-6.07.04.zip",
+      "url": "https://raw.githubusercontent.com/kodiyashimaru/repo/2bc8e4cc76f1505eb0fdde58f6dbe294887b1f88/script.module.magneto/script.module.magneto-6.07.04.zip",
       "version": "6.07.04"
     },
     "viper": {
