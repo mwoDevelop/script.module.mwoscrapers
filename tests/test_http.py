@@ -1,5 +1,8 @@
 import io
 import json
+from types import SimpleNamespace
+from urllib.error import HTTPError
+from urllib.request import Request
 
 import pytest
 from mwoscrapers import http
@@ -28,26 +31,37 @@ class _Response:
 
 def test_read_json_is_bounded_and_rejects_cross_origin_redirect(monkeypatch):
     url = "https://provider.example/stream/movie/tt1.json"
+    response = _Response(b"{}", url)
     monkeypatch.setattr(
         http,
-        "urlopen",
-        lambda _request, timeout: _Response(b"{}", url),
+        "build_opener",
+        lambda _handler: SimpleNamespace(
+            open=lambda _request, timeout: response
+        ),
     )
     assert http.read_json(url, 1) == {}
 
-    monkeypatch.setattr(
-        http,
-        "urlopen",
-        lambda _request, timeout: _Response(b"{}", "https://other.example/item"),
-    )
+    response = _Response(b"{}", "https://other.example/item")
     with pytest.raises(ValueError, match="cross-origin"):
         http.read_json(url, 1)
 
-    payload = json.dumps({"streams": ["x" * 100]}).encode("utf-8")
-    monkeypatch.setattr(
-        http,
-        "urlopen",
-        lambda _request, timeout: _Response(payload, url),
+    response = _Response(
+        json.dumps({"streams": ["x" * 100]}).encode("utf-8"), url
     )
     with pytest.raises(ValueError, match="size limit"):
         http.read_json(url, 1, max_bytes=16)
+
+
+def test_redirect_handler_rejects_cross_origin_before_following():
+    handler = http.SameOriginRedirectHandler()
+    request = Request("https://provider.example/start")
+
+    with pytest.raises(HTTPError, match="cross-origin"):
+        handler.redirect_request(
+            request,
+            None,
+            302,
+            "Found",
+            {},
+            "https://other.example/private",
+        )

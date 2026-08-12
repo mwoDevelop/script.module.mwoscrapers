@@ -48,7 +48,7 @@ PROVIDER_DESCRIPTORS = (
         enabled_by_default=True,
         status="qualified",
         capabilities=("movie", "episode"),
-        timeout_seconds=8,
+        timeout_seconds=12,
         max_results=100,
     ),
     ProviderDescriptor(

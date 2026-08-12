@@ -3,7 +3,7 @@
 import json
 from urllib.error import HTTPError
 from urllib.parse import urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 
@@ -13,11 +13,27 @@ def _origin(url):
     return parsed.scheme.lower(), parsed.hostname, parsed.port
 
 
+class SameOriginRedirectHandler(HTTPRedirectHandler):
+    """Reject a cross-origin redirect before urllib sends the next request."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        if _origin(req.full_url) != _origin(newurl):
+            raise HTTPError(
+                newurl,
+                code,
+                "cross-origin provider redirect rejected",
+                headers,
+                fp,
+            )
+        return super().redirect_request(req, fp, code, msg, headers, newurl)
+
+
 def read_json(url, timeout, headers=None, max_bytes=MAX_RESPONSE_BYTES):
     request_headers = {"User-Agent": "MwoScrapers/0.2"}
     request_headers.update(headers or {})
     request = Request(url, headers=request_headers)
-    with urlopen(request, timeout=timeout) as response:
+    opener = build_opener(SameOriginRedirectHandler())
+    with opener.open(request, timeout=timeout) as response:
         if response.status != 200:
             raise HTTPError(
                 url,
@@ -35,4 +51,3 @@ def read_json(url, timeout, headers=None, max_bytes=MAX_RESPONSE_BYTES):
     if len(payload) > max_bytes:
         raise ValueError("provider response exceeds size limit")
     return json.loads(payload.decode("utf-8"))
-
