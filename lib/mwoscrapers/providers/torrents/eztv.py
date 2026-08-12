@@ -34,17 +34,20 @@ class source(JsonApiSource):
         return payload
 
     @staticmethod
-    def _page_order(total_pages):
-        if total_pages <= 0:
+    def _page_order(total_pages, limit):
+        limit = min(max(int(limit), 0), max(int(total_pages), 0))
+        if limit == 0:
             return []
         order = [1]
-        if total_pages == 1:
+        if limit == 1:
             return order
         order.append(total_pages)
         intervals = [(2, total_pages - 1)]
-        while intervals:
+        while intervals and len(order) < limit:
             next_intervals = []
             for low, high in intervals:
+                if len(order) >= limit:
+                    break
                 if low > high:
                     continue
                 middle = (low + high) // 2
@@ -112,7 +115,7 @@ class source(JsonApiSource):
         except (TypeError, ValueError):
             total = 0
         total_pages = max(1, math.ceil(total / self.page_size))
-        for page in self._page_order(total_pages)[: self.max_pages]:
+        for page in self._page_order(total_pages, self.max_pages):
             if page == 1:
                 continue
             matches = self._normalize_matches(

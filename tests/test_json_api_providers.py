@@ -183,6 +183,15 @@ def test_eztv_page_order_reaches_middle_before_bounded_limit(monkeypatch):
     assert pages == [1, 10, 5]
 
 
+def test_eztv_page_order_is_bounded_before_expanding_untrusted_count():
+    provider = eztv_source()
+
+    pages = provider._page_order(10**12, provider.max_pages)
+
+    assert len(pages) == provider.max_pages
+    assert pages[:3] == [1, 10**12, 500000000000]
+
+
 def test_piratebay_movie_rejects_wrong_imdb_and_title(monkeypatch):
     provider = piratebay_source()
     monkeypatch.setattr(

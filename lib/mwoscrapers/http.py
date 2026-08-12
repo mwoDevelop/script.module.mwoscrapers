@@ -10,7 +10,11 @@ MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 
 def _origin(url):
     parsed = urlsplit(url)
-    return parsed.scheme.lower(), parsed.hostname, parsed.port
+    scheme = parsed.scheme.lower()
+    port = parsed.port
+    if port is None:
+        port = {"http": 80, "https": 443}.get(scheme)
+    return scheme, parsed.hostname, port
 
 
 class SameOriginRedirectHandler(HTTPRedirectHandler):

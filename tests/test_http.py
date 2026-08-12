@@ -65,3 +65,18 @@ def test_redirect_handler_rejects_cross_origin_before_following():
             {},
             "https://other.example/private",
         )
+
+
+def test_redirect_handler_normalizes_default_origin_ports():
+    handler = http.SameOriginRedirectHandler()
+
+    redirected = handler.redirect_request(
+        Request("https://provider.example/start"),
+        None,
+        302,
+        "Found",
+        {},
+        "https://provider.example:443/next",
+    )
+
+    assert redirected.full_url == "https://provider.example:443/next"
