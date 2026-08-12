@@ -1,12 +1,12 @@
 """Original adapter for the public Stremio-compatible stream JSON contract."""
 
-import json
 import re
 from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
 
 from ...contract import validate_result
+from ...descriptors import descriptor
 from ...health import available, failure, success
+from ...http import read_json
 from ...normalize import magnet_uri, normalize_btih, quality_from_name, size_gib_from_name
 from ...settings import provider_endpoint, provider_endpoints
 
@@ -24,12 +24,26 @@ class StremioSource:
     provider_name = ""
     base_url = ""
     timeout = 8
+    max_results = None
+
+    def __init__(self):
+        metadata = descriptor(self.provider_name)
+        self.timeout = metadata.timeout_seconds
+        self.max_results = metadata.max_results
+
+    def _endpoint_base(self, endpoint):
+        return endpoint.rstrip("/")
+
+    def _request_headers(self):
+        return {}
 
     def _stream_url(self, data):
         imdb = str(data.get("imdb") or "").strip()
         if not re.fullmatch(r"tt\d+", imdb):
             return None
-        base_url = provider_endpoint(self.provider_name, self.base_url)
+        base_url = self._endpoint_base(
+            provider_endpoint(self.provider_name, self.base_url)
+        )
         if "tvshowtitle" in data:
             return "%s/stream/series/%s:%s:%s.json" % (
                 base_url,
@@ -52,7 +66,7 @@ class StremioSource:
         else:
             path = "/stream/movie/%s.json" % imdb
         return tuple(
-            endpoint + path
+            self._endpoint_base(endpoint) + path
             for endpoint in provider_endpoints(
                 self.provider_name,
                 self.base_url,
@@ -60,14 +74,11 @@ class StremioSource:
         )
 
     def _request_json(self, url):
-        request = Request(
+        return read_json(
             url,
-            headers={"User-Agent": "MwoScrapers/0.1"},
+            timeout=self.timeout,
+            headers=self._request_headers(),
         )
-        with urlopen(request, timeout=self.timeout) as response:
-            if response.status != 200:
-                raise HTTPError(url, response.status, "unexpected status", response.headers, None)
-            return json.loads(response.read().decode("utf-8"))
 
     def _normalize_stream(self, stream):
         title = str(stream.get("title") or "").strip()
@@ -141,6 +152,8 @@ class StremioSource:
                         continue
                     seen.add(key)
                     normalized.append(item)
+                    if self.max_results and len(normalized) >= self.max_results:
+                        break
                 success(self.provider_name)
                 return normalized
             except (

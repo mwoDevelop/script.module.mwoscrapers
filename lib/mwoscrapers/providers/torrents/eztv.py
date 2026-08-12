@@ -1,0 +1,98 @@
+"""EZTV episode adapter against its public structured JSON API."""
+
+import math
+import re
+from urllib.parse import urlencode
+
+from .json_api import JsonApiSource
+
+
+class source(JsonApiSource):
+    provider_name = "eztv"
+    base_url = "https://eztvx.to"
+    hasMovies = False
+    hasEpisodes = True
+    page_size = 100
+    max_pages = 6
+
+    def _page_url(self, endpoint, imdb, page):
+        query = urlencode(
+            {
+                "imdb_id": imdb,
+                "limit": self.page_size,
+                "page": page,
+            }
+        )
+        return "%s/api/get-torrents?%s" % (endpoint.rstrip("/"), query)
+
+    def _page(self, endpoint, imdb, page):
+        payload = self._request_json(self._page_url(endpoint, imdb, page))
+        if not isinstance(payload, dict) or not isinstance(
+            payload.get("torrents"), list
+        ):
+            raise ValueError("EZTV violated JSON contract")
+        return payload
+
+    @staticmethod
+    def _page_order(total_pages):
+        order = []
+        low, high = 1, total_pages
+        while low <= high:
+            order.append(low)
+            if high != low:
+                order.append(high)
+            low += 1
+            high -= 1
+        return order
+
+    def _normalize_matches(self, torrents, season, episode):
+        result = []
+        for torrent in torrents:
+            if not isinstance(torrent, dict):
+                continue
+            if str(torrent.get("season")) != str(season):
+                continue
+            if str(torrent.get("episode")) != str(episode):
+                continue
+            name = torrent.get("filename") or torrent.get("title")
+            result.append(
+                self._result(
+                    torrent.get("hash"),
+                    name,
+                    seeders=torrent.get("seeds"),
+                    size_bytes=torrent.get("size_bytes"),
+                    metadata=name,
+                )
+            )
+        return result
+
+    def _results_for_endpoint(self, endpoint, data):
+        if "tvshowtitle" not in data:
+            return []
+        imdb = str(data.get("imdb") or "").strip()
+        if not re.fullmatch(r"tt\d+", imdb):
+            return []
+        season = int(data["season"])
+        episode = int(data["episode"])
+        first = self._page(endpoint, imdb[2:], 1)
+        matches = self._normalize_matches(
+            first["torrents"], season, episode
+        )
+        if matches:
+            return matches
+        try:
+            total = max(int(first.get("torrents_count") or 0), 0)
+        except (TypeError, ValueError):
+            total = 0
+        total_pages = max(1, math.ceil(total / self.page_size))
+        for page in self._page_order(total_pages)[: self.max_pages]:
+            if page == 1:
+                continue
+            matches = self._normalize_matches(
+                self._page(endpoint, imdb[2:], page)["torrents"],
+                season,
+                episode,
+            )
+            if matches:
+                return matches
+        return []

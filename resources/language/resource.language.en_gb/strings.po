@@ -27,3 +27,35 @@ msgstr "Torrentio endpoint or LAN relay"
 msgctxt "#32005"
 msgid "Comet endpoint or LAN relay"
 msgstr "Comet endpoint or LAN relay"
+
+msgctxt "#32006"
+msgid "Torz"
+msgstr "Torz"
+
+msgctxt "#32007"
+msgid "Torz endpoint"
+msgstr "Torz endpoint"
+
+msgctxt "#32008"
+msgid "MediaFusion"
+msgstr "MediaFusion"
+
+msgctxt "#32009"
+msgid "MediaFusion endpoint"
+msgstr "MediaFusion endpoint"
+
+msgctxt "#32010"
+msgid "EZTV (episodes)"
+msgstr "EZTV (episodes)"
+
+msgctxt "#32011"
+msgid "EZTV endpoint"
+msgstr "EZTV endpoint"
+
+msgctxt "#32012"
+msgid "Pirate Bay API"
+msgstr "Pirate Bay API"
+
+msgctxt "#32013"
+msgid "Pirate Bay API endpoint"
+msgstr "Pirate Bay API endpoint"

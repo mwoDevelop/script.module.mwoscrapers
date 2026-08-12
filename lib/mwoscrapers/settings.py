@@ -2,9 +2,11 @@
 
 from urllib.parse import urlsplit
 
+from .descriptors import PROVIDER_DESCRIPTORS
+
 DEFAULTS = {
-    "provider.torrentio": True,
-    "provider.comet": True,
+    "provider.%s" % item.name: item.enabled_by_default
+    for item in PROVIDER_DESCRIPTORS
 }
 
 
