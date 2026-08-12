@@ -1,7 +1,26 @@
+import pytest
 from mwoscrapers.providers.torrents.eztv import source as eztv_source
-from mwoscrapers.providers.torrents.piratebay import source as piratebay_source
+from mwoscrapers.providers.torrents.piratebay import (
+    _title_matches,
+)
+from mwoscrapers.providers.torrents.piratebay import (
+    source as piratebay_source,
+)
 
 HASH = "0123456789abcdef0123456789abcdef01234567"
+
+
+@pytest.mark.parametrize(
+    ("release_name", "requested_title"),
+    (
+        ("Pokemon.2023.1080p", "Pokémon"),
+        ("Amelie.2001.1080p", "Amélie"),
+    ),
+)
+def test_piratebay_title_matching_removes_combining_marks(
+    release_name, requested_title
+):
+    assert _title_matches(release_name, requested_title)
 
 
 def test_eztv_returns_only_exact_episode_and_uses_leading_imdb_zero(monkeypatch):

@@ -9,6 +9,11 @@ from .json_api import JsonApiSource
 
 def _normalized_title(value):
     decomposed = unicodedata.normalize("NFKD", str(value or "")).casefold()
+    decomposed = "".join(
+        character
+        for character in decomposed
+        if unicodedata.category(character) != "Mn"
+    )
     return " ".join(re.findall(r"[a-z0-9]+", decomposed))
 
 
@@ -112,4 +117,3 @@ class source(JsonApiSource):
                 )
             )
         return results
-
