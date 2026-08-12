@@ -38,6 +38,11 @@ Both adapters are original implementations against the Stremio-compatible JSON
 contract. No source file from CocoScrapers, ViperScrapers, or Magneto is
 copied.
 
+The daily reviewed-artifact audit follows currently available CocoScrapers and
+ViperScrapers observations. The former Magneto observation is retained in
+`.upstream/retired-observations.json`; its pinned repository artifact was
+removed upstream and is not an active runtime dependency.
+
 Each provider has an optional endpoint setting. Leaving it empty uses the
 public default. A private endpoint can point at a self-hosted provider or at
 the bundled LAN relay, for example:

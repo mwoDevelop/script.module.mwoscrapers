@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "sources": {
+    "magneto": {
+      "commit": "257c91839c412eb29ec4f25dbe2b4b35bda27071",
+      "reason": "pinned artifact removed upstream",
+      "repository": "kodiyashimaru/repo",
+      "retired_at": "2026-08-12",
+      "sha256": "f46f4d4f25453f3683beebd00bf35ab181e0588da32a4e8dd73917db27615427",
+      "version": "6.07.04"
+    }
+  }
+}

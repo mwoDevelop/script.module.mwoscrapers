@@ -9,14 +9,6 @@
       "url": "https://raw.githubusercontent.com/not-coco-joe/repository.cocoscrapers/3b313077fc8e645f295bf5e4d44f8c34f9427fe7/zips/script.module.cocoscrapers/script.module.cocoscrapers-1.0.39.zip",
       "version": "1.0.39"
     },
-    "magneto": {
-      "commit": "257c91839c412eb29ec4f25dbe2b4b35bda27071",
-      "ref": "master",
-      "repository": "kodiyashimaru/repo",
-      "sha256": "f46f4d4f25453f3683beebd00bf35ab181e0588da32a4e8dd73917db27615427",
-      "url": "https://raw.githubusercontent.com/kodiyashimaru/repo/257c91839c412eb29ec4f25dbe2b4b35bda27071/script.module.magneto/script.module.magneto-6.07.04.zip",
-      "version": "6.07.04"
-    },
     "viper": {
       "commit": "5ef7c70c5eb61d5f4a1be3d17a8e04c44c8c5760",
       "ref": "master",
