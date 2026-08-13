@@ -19,9 +19,11 @@ def test_downloaded_provider_artifacts_are_scanned_without_importing_them():
     ).read_text(encoding="utf-8")
     download = workflow.index("Download pinned artifacts")
     scan = workflow.index("Scan downloaded immutable provider artifacts")
+    verify = workflow.index("Verify exact provider artifact scan coverage")
     upload = workflow.index("actions/upload-artifact")
-    assert download < scan < upload
+    assert download < scan < verify < upload
     assert "candidate-path: upstream-audit" in workflow
+    assert "tools/verify_audit_scan.py" in workflow
 
 
 def test_relay_dockerfile_is_scanned_before_the_build():

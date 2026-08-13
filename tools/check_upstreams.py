@@ -4,21 +4,22 @@
 import argparse
 import hashlib
 import json
-import tempfile
+import re
 import time
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 try:
-    from .safe_ingest import inspect_zip
+    from .safe_ingest import materialize_zip
 except ImportError:  # Direct script execution.
-    from safe_ingest import inspect_zip
+    from safe_ingest import materialize_zip
 
 
 MAX_DOWNLOAD = 64 * 1024 * 1024
 USER_AGENT = "MwoScrapers-Audit/0.2"
 FIELDS = {"repository", "ref", "commit", "version", "url", "sha256"}
+SOURCE = re.compile(r"^[a-z0-9][a-z0-9._-]{0,63}$")
 
 
 class AuditFailure(RuntimeError):
@@ -34,6 +35,8 @@ def load_lock(path):
     if payload.get("schema") != 1 or not isinstance(sources, dict) or not sources:
         raise ValueError("invalid upstream observation lock")
     for name, entry in sources.items():
+        if not SOURCE.fullmatch(name):
+            raise ValueError("invalid observation source name")
         if set(entry) != FIELDS:
             raise ValueError("invalid observation fields for %s" % name)
         if len(entry["commit"]) != 40 or len(entry["sha256"]) != 64:
@@ -75,6 +78,10 @@ def _error_kind(error):
 def audit(lock_path, output, read_url=_read_url):
     output = Path(output)
     output.mkdir(parents=True, exist_ok=True)
+    archives = output / "archives"
+    materialized = output / "materialized"
+    archives.mkdir(mode=0o700)
+    materialized.mkdir(mode=0o700)
     summary = {}
     for name, entry in sorted(load_lock(lock_path).items()):
         item = {
@@ -90,12 +97,15 @@ def audit(lock_path, output, read_url=_read_url):
             item["actual_sha256"] = digest
             if digest != entry["sha256"]:
                 raise ValueError("SHA-256 drift")
-            with tempfile.NamedTemporaryFile(suffix=".zip") as handle:
-                handle.write(payload)
-                handle.flush()
-                report = inspect_zip(handle.name)
+            archive_relative = Path("archives") / (name + "-" + digest + ".zip")
+            archive_path = output / archive_relative
+            archive_path.write_bytes(payload)
+            archive_path.chmod(0o600)
+            report = materialize_zip(archive_path, materialized / name)
             report.pop("path", None)
             item.update(report)
+            item["archive"] = archive_relative.as_posix()
+            item["materialized"] = (Path("materialized") / name).as_posix()
             item["status"] = "ok"
         except Exception as error:  # Continue to audit the remaining sources.
             item["status"] = _error_kind(error)

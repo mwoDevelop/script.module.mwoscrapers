@@ -3,6 +3,7 @@
 
 import argparse
 import json
+import os
 import stat
 from pathlib import Path, PurePosixPath, PureWindowsPath
 from zipfile import BadZipFile, ZipFile
@@ -43,6 +44,7 @@ def inspect_zip(path):
             raise UnsafeArchive("file count exceeds limit")
         names = set()
         folded_names = set()
+        regular_names = set()
         uncompressed = 0
         compressed = 0
         for entry in entries:
@@ -55,12 +57,23 @@ def inspect_zip(path):
             names.add(normalized)
             folded_names.add(folded)
             mode = entry.external_attr >> 16
-            if stat.S_ISLNK(mode) or stat.S_ISCHR(mode) or stat.S_ISBLK(mode):
+            file_type = stat.S_IFMT(mode)
+            if entry.flag_bits & 0x1:
+                raise UnsafeArchive("encrypted member: %s" % entry.filename)
+            if file_type and file_type not in {stat.S_IFREG, stat.S_IFDIR}:
                 raise UnsafeArchive("unsupported special file: %s" % entry.filename)
+            if not entry.is_dir():
+                regular_names.add(normalized.rstrip("/"))
             if normalized.lower().endswith((".zip", ".tar", ".tgz", ".gz", ".7z", ".rar")):
                 raise UnsafeArchive("nested archive: %s" % entry.filename)
             uncompressed += entry.file_size
             compressed += entry.compress_size
+        for name in regular_names:
+            parent = PurePosixPath(name).parent
+            while parent != PurePosixPath("."):
+                if parent.as_posix() in regular_names:
+                    raise UnsafeArchive("file is also an archive directory: %s" % parent)
+                parent = parent.parent
         if uncompressed > MAX_UNCOMPRESSED:
             raise UnsafeArchive("uncompressed size exceeds limit")
         if compressed and uncompressed / compressed > MAX_RATIO:
@@ -72,6 +85,51 @@ def inspect_zip(path):
             "uncompressed_bytes": uncompressed,
             "entries": sorted(names),
         }
+
+
+def materialize_zip(path, destination):
+    """Safely materialize a reviewed ZIP without importing or executing it."""
+
+    path = Path(path)
+    destination = Path(destination)
+    report = inspect_zip(path)
+    if destination.exists() or destination.is_symlink():
+        raise UnsafeArchive("materialization destination already exists")
+    destination.mkdir(parents=True, mode=0o700)
+    materialized_files = 0
+    materialized_bytes = 0
+    try:
+        with ZipFile(path) as archive:
+            for entry in archive.infolist():
+                relative = PurePosixPath(entry.filename.replace("\\", "/"))
+                target = destination.joinpath(*relative.parts)
+                if entry.is_dir():
+                    target.mkdir(parents=True, exist_ok=True, mode=0o700)
+                    continue
+                target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+                descriptor = os.open(
+                    target,
+                    os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+                    0o600,
+                )
+                with archive.open(entry) as source, os.fdopen(descriptor, "wb") as output:
+                    while True:
+                        block = source.read(1024 * 1024)
+                        if not block:
+                            break
+                        output.write(block)
+                materialized_files += 1
+                materialized_bytes += entry.file_size
+    except Exception:
+        import shutil
+
+        shutil.rmtree(destination, ignore_errors=True)
+        raise
+    return {
+        **report,
+        "materialized_files": materialized_files,
+        "materialized_bytes": materialized_bytes,
+    }
 
 
 def main():

@@ -50,6 +50,12 @@ def test_audit_records_all_sources_before_failing(tmp_path):
     report = json.loads((tmp_path / "report/summary.json").read_text())
     assert report["sources"]["bad"]["status"] == "unavailable"
     assert report["sources"]["good"]["status"] == "ok"
+    good_report = report["sources"]["good"]
+    archive = tmp_path / "report" / good_report["archive"]
+    materialized = tmp_path / "report" / good_report["materialized"] / "good/addon.xml"
+    assert archive.read_bytes() == good
+    assert materialized.read_text() == "<addon/>"
+    assert good_report["materialized_files"] == 1
 
 
 def test_lock_requires_structured_identity(tmp_path):
@@ -59,6 +65,14 @@ def test_lock_requires_structured_identity(tmp_path):
         encoding="utf-8",
     )
     with pytest.raises(ValueError, match="fields"):
+        load_lock(path)
+
+
+def test_lock_rejects_unsafe_source_name(tmp_path):
+    payload = _zip_payload("good")
+    path = tmp_path / "lock.json"
+    _write_lock(path, {"../escape": _entry("good", payload)})
+    with pytest.raises(ValueError, match="source name"):
         load_lock(path)
 
 
