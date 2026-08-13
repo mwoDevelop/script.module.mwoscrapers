@@ -23,6 +23,8 @@ def test_materializes_safe_archive_without_executable_bits(tmp_path):
     target = tmp_path / "content/addon/lib/provider.py"
     assert target.read_text() == "VALUE = 1\n"
     assert target.stat().st_mode & 0o111 == 0
+    assert target.stat().st_mode & 0o444 == 0o444
+    assert (tmp_path / "content").stat().st_mode & 0o111 == 0o111
     assert report["materialized_files"] == 1
     assert report["materialized_bytes"] == len("VALUE = 1\n")
 

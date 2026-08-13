@@ -95,7 +95,10 @@ def materialize_zip(path, destination):
     report = inspect_zip(path)
     if destination.exists() or destination.is_symlink():
         raise UnsafeArchive("materialization destination already exists")
-    destination.mkdir(parents=True, mode=0o700)
+    # The pinned scanner containers run as an unprivileged uid that differs
+    # from the GitHub runner. These public upstream bytes therefore need
+    # read/traverse permission without gaining write or execute permission.
+    destination.mkdir(parents=True, mode=0o755)
     materialized_files = 0
     materialized_bytes = 0
     try:
@@ -104,13 +107,13 @@ def materialize_zip(path, destination):
                 relative = PurePosixPath(entry.filename.replace("\\", "/"))
                 target = destination.joinpath(*relative.parts)
                 if entry.is_dir():
-                    target.mkdir(parents=True, exist_ok=True, mode=0o700)
+                    target.mkdir(parents=True, exist_ok=True, mode=0o755)
                     continue
-                target.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+                target.parent.mkdir(parents=True, exist_ok=True, mode=0o755)
                 descriptor = os.open(
                     target,
                     os.O_WRONLY | os.O_CREAT | os.O_EXCL,
-                    0o600,
+                    0o644,
                 )
                 with archive.open(entry) as source, os.fdopen(descriptor, "wb") as output:
                     while True:
