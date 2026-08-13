@@ -80,8 +80,8 @@ def audit(lock_path, output, read_url=_read_url):
     output.mkdir(parents=True, exist_ok=True)
     archives = output / "archives"
     materialized = output / "materialized"
-    archives.mkdir(mode=0o700)
-    materialized.mkdir(mode=0o700)
+    archives.mkdir(mode=0o755)
+    materialized.mkdir(mode=0o755)
     summary = {}
     for name, entry in sorted(load_lock(lock_path).items()):
         item = {
@@ -100,7 +100,7 @@ def audit(lock_path, output, read_url=_read_url):
             archive_relative = Path("archives") / (name + "-" + digest + ".zip")
             archive_path = output / archive_relative
             archive_path.write_bytes(payload)
-            archive_path.chmod(0o600)
+            archive_path.chmod(0o644)
             report = materialize_zip(archive_path, materialized / name)
             report.pop("path", None)
             item.update(report)

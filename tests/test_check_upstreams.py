@@ -54,6 +54,7 @@ def test_audit_records_all_sources_before_failing(tmp_path):
     archive = tmp_path / "report" / good_report["archive"]
     materialized = tmp_path / "report" / good_report["materialized"] / "good/addon.xml"
     assert archive.read_bytes() == good
+    assert archive.stat().st_mode & 0o444 == 0o444
     assert materialized.read_text() == "<addon/>"
     assert good_report["materialized_files"] == 1
 
