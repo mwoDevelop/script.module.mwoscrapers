@@ -10,11 +10,11 @@
       "version": "1.0.39"
     },
     "viper": {
-      "commit": "5ef7c70c5eb61d5f4a1be3d17a8e04c44c8c5760",
+      "commit": "ecbad6fb304e651fc5b9b7a8870bafe18058f3d4",
       "ref": "master",
       "repository": "OldManJax/repository.oldsalt",
       "sha256": "9c089bdffa6f30a0a987dfaf289c15eebddeaefc786171609e4e2ef6793f8f4a",
-      "url": "https://raw.githubusercontent.com/OldManJax/repository.oldsalt/5ef7c70c5eb61d5f4a1be3d17a8e04c44c8c5760/script.module.viperscrapers/script.module.viperscrapers-1.5.4.zip",
+      "url": "https://raw.githubusercontent.com/OldManJax/repository.oldsalt/ecbad6fb304e651fc5b9b7a8870bafe18058f3d4/script.module.viperscrapers/script.module.viperscrapers-1.5.4.zip",
       "version": "1.5.4"
     }
   }
